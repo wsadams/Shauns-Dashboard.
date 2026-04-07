@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shaun's Personal Dashboard v3.11</title>
+<title>Shaun's Personal Dashboard v3.11a</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Inter:wght@300;400;500;600&family=Nunito:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ── PALETTE ACCENTS ─────────────────────────────── */
@@ -465,7 +465,7 @@ tr.sub-add-row td{background:rgba(124,111,232,0.03);}
 <!-- HEADER -->
 <header>
   <div class="logo-block">
-    <div class="logo-name" id="logoName">Shaun's Personal Dashboard <span style="font-size:11px;color:var(--muted);font-weight:400">v3.11</span></div>
+    <div class="logo-name" id="logoName">Shaun's Personal Dashboard <span style="font-size:11px;color:var(--muted);font-weight:400">v3.11a</span></div>
     <div class="logo-sub" id="logoSub">Get Shit Done</div>
   </div>
   <div class="hdr-right">
@@ -2539,7 +2539,7 @@ function saveIdentity(){
   cfg.user=document.getElementById('setUser').value.trim()||'';
   cfg.birth=document.getElementById('setBirth').value||'';
   saveCfg();
-  document.querySelector('.logo-name').innerHTML=`${esc(cfg.name)} <span style="font-size:11px;color:var(--muted);font-weight:400">v3.11</span>`;
+  document.querySelector('.logo-name').innerHTML=`${esc(cfg.name)} <span style="font-size:11px;color:var(--muted);font-weight:400">v3.11a</span>`;
   alert('Saved!');
 }
 function saveApiKey(){cfg.apiKey=document.getElementById('setApiKey').value.trim();saveCfg();alert('API key saved.');}
@@ -2695,7 +2695,7 @@ async function init(){
   document.documentElement.dataset.theme=cfg.theme||'dark';
   document.documentElement.dataset.palette=cfg.palette||'amethyst';
   document.getElementById('themeBtn').textContent=(cfg.theme||'dark')==='light'?'🌙 Dark':'☀ Light';
-  document.querySelector('.logo-name').innerHTML=`${esc(cfg.name||"Shaun's Personal Dashboard")} <span style="font-size:11px;color:var(--muted);font-weight:400">v3.11</span>`;
+  document.querySelector('.logo-name').innerHTML=`${esc(cfg.name||"Shaun's Personal Dashboard")} <span style="font-size:11px;color:var(--muted);font-weight:400">v3.11a</span>`;
   applyAppearance();
 
   document.getElementById('maDate').value=today();
