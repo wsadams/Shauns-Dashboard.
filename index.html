@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shaun's Personal Dashboard v3.11f</title>
+<title>Shaun's Personal Dashboard v3.12</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Inter:wght@300;400;500;600&family=Nunito:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ── PALETTE ACCENTS ─────────────────────────────── */
@@ -178,6 +178,8 @@ input[type=date]{color-scheme:dark;}
 .mhdr h2{font-size:16px;font-weight:600;color:#E8E0D0;}
 .mbody{padding:16px 20px;display:flex;flex-direction:column;gap:13px;}
 .mfoot{padding:11px 20px;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:flex-end;gap:8px;}
+.field-disabled input,.field-disabled select,.field-disabled textarea{opacity:.45;pointer-events:none;cursor:not-allowed;background:var(--bg3)!important;}
+.field-disabled label{opacity:.6;}
 .close-btn{background:none;border:none;color:#6A7A90;font-size:20px;cursor:pointer;line-height:1;transition:color .13s;}
 .close-btn:hover{color:#E8E0D0;}
 
@@ -471,7 +473,7 @@ tr.sub-add-row td{background:rgba(124,111,232,0.03);}
 <!-- HEADER -->
 <header>
   <div class="logo-block">
-    <div class="logo-name" id="logoName">Shaun's Personal Dashboard <span style="font-size:11px;color:var(--muted);font-weight:400">v3.11f</span></div>
+    <div class="logo-name" id="logoName">Shaun's Personal Dashboard <span style="font-size:11px;color:var(--muted);font-weight:400">v3.12</span></div>
     <div class="logo-sub" id="logoSub">Get Shit Done</div>
   </div>
   <div class="hdr-right">
@@ -512,11 +514,15 @@ tr.sub-add-row td{background:rgba(124,111,232,0.03);}
   <div class="stat-row" id="homeStats"></div>
   <div class="home-top">
     <div class="card">
-      <div class="card-title">⚡ To-Do Today</div>
+      <div class="card-title">⚡ To-Do Today
+        <button class="btn btn-ghost btn-xs" onclick="openTaskModalForHome('today')">＋</button>
+      </div>
       <div id="homeTodayList" ondragover="homeCardDragOver(event)" ondragleave="homeCardDragLeave(event)" ondrop="homeCardDrop(event,'today')" style="min-height:30px;border-radius:7px;transition:box-shadow .15s"><p style="font-size:12px;color:var(--muted)">Flag tasks with "T" in the Workflow tab.</p></div>
     </div>
     <div class="card">
-      <div class="card-title">📅 To-Do Tomorrow</div>
+      <div class="card-title">📅 To-Do Tomorrow
+        <button class="btn btn-ghost btn-xs" onclick="openTaskModalForHome('tomorrow')">＋</button>
+      </div>
       <div id="homeTmrwList" ondragover="homeCardDragOver(event)" ondragleave="homeCardDragLeave(event)" ondrop="homeCardDrop(event,'tomorrow')" style="min-height:30px;border-radius:7px;transition:box-shadow .15s"><p style="font-size:12px;color:var(--muted)">Flag tasks with "M" in the Workflow tab.</p></div>
     </div>
     <div class="card">
@@ -838,6 +844,17 @@ tr.sub-add-row td{background:rgba(124,111,232,0.03);}
       </div>
     </div>
     <div class="card">
+      <div class="card-title">Day Rollover</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <p style="font-size:12px;color:var(--muted);line-height:1.6">Tasks completed before this hour are counted as the <em>previous</em> day. Useful if your day ends after midnight.</p>
+        <div class="field">
+          <label>Rollover Hour <span id="rolloverVal" style="color:var(--acc2);font-weight:400;font-size:11px;margin-left:6px">3:00 AM</span></label>
+          <input type="range" id="rolloverRange" min="0" max="8" step="1" value="3" oninput="setDayRollover(this.value)" style="width:100%;accent-color:var(--acc);margin-top:4px">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px"><span>12 AM</span><span>2 AM</span><span>4 AM</span><span>6 AM</span><span>8 AM</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
       <div class="card-title">API / Integrations</div>
       <div style="display:flex;flex-direction:column;gap:10px">
         <div class="field"><label>Astrology API Key</label><input type="password" id="setApiKey" placeholder="Your key (stored locally)"></div>
@@ -918,10 +935,11 @@ tr.sub-add-row td{background:rgba(124,111,232,0.03);}
     <div class="mbody">
       <input type="hidden" id="editId">
       <input type="hidden" id="fParentId">
+      <input type="hidden" id="fModalSection">
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px">
         <div class="field"><label>Project</label><select id="fProj"></select></div>
         <div class="field"><label>Priority</label><select id="fPrij"><option value="">None</option><option>High</option><option>Medium</option><option>Low</option></select></div>
-        <div class="field"><label>Status</label><select id="fStat"><option>Not Started</option><option>In Progress</option><option>On Hold</option><option>Complete</option></select></div>
+        <div class="field"><label>Status</label><select id="fStat" onchange="onModalStatusChange(this.value)"><option>Not Started</option><option>In Progress</option><option>On Hold</option><option>Complete</option></select></div>
       </div>
       <div class="field"><label>Task Name</label><input type="text" id="fTask" placeholder="What needs to be done?"></div>
       <div class="field"><label>Tags (space-separated #hashtags)</label><div style="position:relative"><input type="text" id="fTags" placeholder="#ISC #launch #urgent" oninput="showTagSuggest(this)" onkeydown="tagSuggestKeyNav(event,this)" onblur="setTimeout(hideTagSuggest,150)" style="width:100%;padding:8px 11px;background:var(--input-bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--body-font);font-size:13px;outline:none"><div id="tagSuggestDrop" class="tag-suggest" style="display:none"></div></div></div>
@@ -934,7 +952,7 @@ tr.sub-add-row td{background:rgba(124,111,232,0.03);}
     </div>
     <div class="mfoot">
       <button class="btn btn-ghost" onclick="closeModal('taskModal')">Cancel</button>
-      <button class="btn btn-acc" onclick="saveTask()">Save Task</button>
+      <button class="btn btn-acc" id="taskSaveBtn" onclick="saveTask()">Save Task</button>
     </div>
   </div>
 </div>
@@ -1041,6 +1059,19 @@ const ls={
   set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))
 };
 const today=()=>new Date().toISOString().slice(0,10);
+// effectiveToday() returns the "logical" date accounting for day-rollover hour
+// e.g. if rollover=3, tasks completed before 3am still count as "yesterday"
+function effectiveToday(){
+  const rollover = parseInt(cfg.dayRollover ?? 3);
+  const now = new Date();
+  if(now.getHours() < rollover){
+    // Before rollover — treat as previous calendar day
+    const prev = new Date(now);
+    prev.setDate(prev.getDate() - 1);
+    return prev.toISOString().slice(0,10);
+  }
+  return now.toISOString().slice(0,10);
+}
 const fmt=d=>{if(!d)return'';const p=d.split('-');return`${p[1]}/${p[2]}/${p[0].slice(2)}`;};
 
 // ══════════════════════════════════════════════════
@@ -1662,6 +1693,11 @@ function setLogoSubSize(val){cfg.logoSubSize=parseInt(val);saveCfg();document.ge
 function setHeaderPad(val){cfg.headerPad=parseInt(val);saveCfg();document.getElementById('headerPadVal').textContent=val+'px';applyAppearance();}
 function setHeaderPadV(val){cfg.headerPadV=parseInt(val);saveCfg();document.getElementById('headerPadVVal').textContent=val+'px';applyAppearance();}
 function setMainPad(val){cfg.mainPad=parseInt(val);saveCfg();document.getElementById('mainPadVal').textContent=val+'px';applyAppearance();}
+function setDayRollover(val){
+  cfg.dayRollover=parseInt(val);saveCfg();
+  const h=parseInt(val);
+  document.getElementById('rolloverVal').textContent=h===0?'12:00 AM':`${h}:00 AM`;
+}
 function resetTypography(){
   Object.assign(cfg,{bodyFontSize:14,thNameSize:13,blockerNameSize:12.5,pSize:13,logoNameSize:19,logoSubSize:10,headerPad:22,headerPadV:0,mainPad:18});
   saveCfg();renderSettings();applyAppearance();
@@ -1766,8 +1802,14 @@ function homeDrop(e,targetId,targetSec){
     tasks.splice(newTo,0,t);
   } else {
     // Move to a different section
-    if(targetSec==='today'){t.flagToday=true;t.flagTmrw=false;}
-    else if(targetSec==='tomorrow'){t.flagTmrw=true;t.flagToday=false;}
+    if(targetSec==='today'){
+      t.flagToday=true;t.flagTmrw=false;
+      // If coming from completed, un-complete it
+      if(dragSec==='completed'){t.status='Not Started';t.completedAt=null;t.pct=t.pct===100?0:t.pct;}
+    } else if(targetSec==='tomorrow'){
+      t.flagTmrw=true;t.flagToday=false;
+      if(dragSec==='completed'){t.status='Not Started';t.completedAt=null;t.pct=t.pct===100?0:t.pct;}
+    }
   }
   saveTasks();renderHome();renderTasks();
 }
@@ -1784,8 +1826,13 @@ function homeCardDrop(e,sec){
   if(sec==='completed'){
     t.status='Complete';t.pct=100;t.completedAt=new Date().toISOString();
     t.flagToday=false;t.flagTmrw=false;
-  } else if(sec==='today'){t.flagToday=true;t.flagTmrw=false;}
-  else if(sec==='tomorrow'){t.flagTmrw=true;t.flagToday=false;}
+  } else if(sec==='today'){
+    t.flagToday=true;t.flagTmrw=false;
+    if(dragSec==='completed'){t.status='Not Started';t.completedAt=null;t.pct=t.pct===100?0:t.pct;}
+  } else if(sec==='tomorrow'){
+    t.flagTmrw=true;t.flagToday=false;
+    if(dragSec==='completed'){t.status='Not Started';t.completedAt=null;t.pct=t.pct===100?0:t.pct;}
+  }
   saveTasks();renderHome();renderTasks();
 }
 
@@ -1794,8 +1841,8 @@ function homeCardDrop(e,sec){
 // ══════════════════════════════════════════════════
 function renderHome(){
   const active=tasks.filter(t=>t.status!=='Complete'&&!t.parentId);
-  const doneToday=tasks.filter(t=>t.completedAt&&t.completedAt.slice(0,10)===today());
-  const overdue=tasks.filter(t=>t.dueDate&&t.status!=='Complete'&&t.dueDate<today());
+  const doneToday=tasks.filter(t=>t.completedAt&&t.completedAt.slice(0,10)===effectiveToday());
+  const overdue=tasks.filter(t=>t.dueDate&&t.status!=='Complete'&&t.dueDate<effectiveToday());
   const blocked=tasks.filter(t=>t.blockedBy&&String(t.blockedBy).trim()!==''&&t.status!=='Complete');
 
   document.getElementById('homeStats').innerHTML=`
@@ -1853,14 +1900,20 @@ function taskRow(t, section){
   </div>`;
 }
 
-function setMaToday(){document.getElementById('maDate').value=today();renderCompletedToday();}
+function setMaToday(){document.getElementById('maDate').value=effectiveToday();renderCompletedToday();}
 function renderCompletedToday(){
-  const d=document.getElementById('maDate')?.value||today();
+  const d=document.getElementById('maDate')?.value||effectiveToday();
   const done=tasks.filter(t=>t.completedAt&&t.completedAt.slice(0,10)===d);
   const el=document.getElementById('massiveActions');
   const inner=done.length
-    ?done.map(t=>`<div class="ct-row">
-        <input type="checkbox" class="ct-cb" checked onchange="uncompleteTask(${t.id},this)" title="Uncheck to move back to queue">
+    ?done.map(t=>`<div class="ct-row" draggable="true"
+        ondragstart="homeDragStart(event,${t.id},'completed')"
+        ondragend="this.style.opacity=''"
+        ondragover="homeDragOver(event,${t.id},'completed')"
+        ondrop="homeDrop(event,${t.id},'completed')"
+        ondragleave="homeDragLeave(event)"
+        style="cursor:grab">
+        <input type="checkbox" class="ct-cb" checked onchange="uncompleteTask(${t.id},this)" title="Uncheck to move back to queue" onclick="event.stopPropagation()">
         <span class="ct-name done" style="text-decoration:line-through">${esc(t.task)}</span>
         <span class="ct-time">${new Date(t.completedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
       </div>`).join('')
@@ -1986,7 +2039,7 @@ function renderTasks(){
   let data=getFiltered(); // top-level tasks only
   if(sortCol)data.sort((a,b)=>{const va=(a[sortCol]||'').toString().toLowerCase(),vb=(b[sortCol]||'').toString().toLowerCase();return va<vb?-sortDir:va>vb?sortDir:0;});
 
-  const tod=today();
+  const tod=effectiveToday();
   const tbody=document.getElementById('taskTbody');if(!tbody)return;
   if(!data.length){tbody.innerHTML=`<tr><td colspan="13" style="text-align:center;padding:22px;color:var(--muted)">No tasks. Click <strong>+ Add Task</strong> to begin.</td></tr>`;return;}
 
@@ -2035,7 +2088,7 @@ function getFiltered(){
   const tod=today();
   return tasks.filter(t=>{
     if(t.parentId) return false; // subtasks rendered inline under parent
-    if(t.status==='Complete'){const completedToday=t.completedAt&&t.completedAt.slice(0,10)===tod;if(!completedToday&&!showD)return false;}
+    if(t.status==='Complete'){const completedToday=t.completedAt&&t.completedAt.slice(0,10)===effectiveToday();if(!completedToday&&!showD)return false;}
     if(activeProjTab!=='All'&&t.project!==activeProjTab)return false;
     if(q&&!(t.task||'').toLowerCase().includes(q)&&!(t.tags||[]).join(' ').includes(q))return false;
     if(fs&&t.status!==fs)return false;
@@ -2109,16 +2162,25 @@ function openSubtaskModal(parentId){
   document.getElementById('fDue').value='';document.getElementById('fPct').value=0;
   document.getElementById('fParentId').value=parentId;
   document.getElementById('taskModalTitle').textContent=`Add Subtask — ${parent.task.slice(0,40)}`;
+  setTaskModalLock(false);
   openModal('taskModal');
+}
+
+function openTaskModalForHome(section){
+  // Open the add-task modal pre-flagged for today or tomorrow
+  openTaskModal();
+  // After modal opens, set a flag so saveTask knows to flag it
+  document.getElementById('fModalSection').value=section;
 }
 
 function openTaskModal(id){
   const fp=document.getElementById('fProj');
   fp.innerHTML=projects.map(p=>`<option>${esc(p)}</option>`).join('');
-  ['editId','fTask','fTags','fNote','fBlockedBy','fParentId'].forEach(i=>document.getElementById(i).value='');
+  ['editId','fTask','fTags','fNote','fBlockedBy','fParentId','fModalSection'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('fPrij').value='';document.getElementById('fStat').value='Not Started';
   document.getElementById('fDue').value='';document.getElementById('fPct').value=0;
   document.getElementById('taskModalTitle').textContent='Add Task';
+  setTaskModalLock(false);
   // Pre-select active project tab
   if(activeProjTab!=='All'&&projects.includes(activeProjTab))fp.value=activeProjTab;
   if(typeof id==='number'){
@@ -2130,8 +2192,35 @@ function openTaskModal(id){
     document.getElementById('fNote').value=t.note||'';document.getElementById('fBlockedBy').value=t.blockedBy||'';
     document.getElementById('fParentId').value=t.parentId||'';
     document.getElementById('taskModalTitle').textContent=t.parentId?'Edit Subtask':'Edit Task';
+    // Lock fields if task is Complete — only Status is editable
+    setTaskModalLock(t.status==='Complete');
   }
   openModal('taskModal');
+}
+
+function onModalStatusChange(val){
+  // If task was Complete (locked) and user changes status, unlock all fields
+  if(val!=='Complete'){
+    setTaskModalLock(false);
+  }
+}
+
+function setTaskModalLock(locked){
+  const fieldsToLock=['fProj','fPrij','fTask','fTags','fDue','fPct','fNote','fBlockedBy'];
+  fieldsToLock.forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const wrap=el.closest('.field');
+    if(locked){
+      el.disabled=true;
+      if(wrap) wrap.classList.add('field-disabled');
+    } else {
+      el.disabled=false;
+      if(wrap) wrap.classList.remove('field-disabled');
+    }
+  });
+  // Show/hide save button
+  document.getElementById('taskSaveBtn').style.display=locked?'none':'';
+  document.getElementById('taskModalTitle').style.opacity=locked?'.7':'1';
 }
 
 function saveTask(){
@@ -2150,7 +2239,8 @@ function saveTask(){
     if(newStatus==='Complete'&&!wasC)t.completedAt=new Date().toISOString();
     if(newStatus!=='Complete')t.completedAt=null;
   }else{
-    tasks.push({id:++taskSeq,_sbid:null,project:document.getElementById('fProj').value,priority:document.getElementById('fPrij').value,status:newStatus,task:name,tags,dueDate:document.getElementById('fDue').value,pct:parseInt(document.getElementById('fPct').value)||0,note:document.getElementById('fNote').value,completedAt:newStatus==='Complete'?new Date().toISOString():null,flagToday:false,flagTmrw:false,blockedBy:bb,parentId});
+    const modalSec=document.getElementById('fModalSection').value;
+    tasks.push({id:++taskSeq,_sbid:null,project:document.getElementById('fProj').value,priority:document.getElementById('fPrij').value,status:newStatus,task:name,tags,dueDate:document.getElementById('fDue').value,pct:parseInt(document.getElementById('fPct').value)||0,note:document.getElementById('fNote').value,completedAt:newStatus==='Complete'?new Date().toISOString():null,flagToday:modalSec==='today',flagTmrw:modalSec==='tomorrow',blockedBy:bb,parentId});
     ls.set('gsd_tseq',taskSeq);
   }
   saveTasks();closeModal('taskModal');renderTasks();renderHome();
@@ -2219,7 +2309,7 @@ function kbDrop(e){
   const prev=taskViewMode;taskViewMode='list';renderTasks();taskViewMode=prev;
 }
 
-function setCompToday(){document.getElementById('compDate').value=today();renderCompSection();}
+function setCompToday(){document.getElementById('compDate').value=effectiveToday();renderCompSection();}
 function renderCompSection(){
   const d=document.getElementById('compDate')?.value||today();
   const done=tasks.filter(t=>t.completedAt&&t.completedAt.slice(0,10)===d);
@@ -2615,6 +2705,8 @@ function renderSettings(){
   const hp=cfg.headerPad||22;document.getElementById('headerPadRange').value=hp;document.getElementById('headerPadVal').textContent=hp+'px';
   const hpv=cfg.headerPadV||0;document.getElementById('headerPadVRange').value=hpv;document.getElementById('headerPadVVal').textContent=hpv+'px';
   const mp=cfg.mainPad||18;document.getElementById('mainPadRange').value=mp;document.getElementById('mainPadVal').textContent=mp+'px';
+  const ro=cfg.dayRollover??3;document.getElementById('rolloverRange').value=ro;
+  document.getElementById('rolloverVal').textContent=ro===0?'12:00 AM':`${ro}:00 AM`;
   renderProjSettings();
 }
 
@@ -2623,7 +2715,7 @@ function saveIdentity(){
   cfg.user=document.getElementById('setUser').value.trim()||'';
   cfg.birth=document.getElementById('setBirth').value||'';
   saveCfg();
-  document.querySelector('.logo-name').innerHTML=`${esc(cfg.name)} <span style="font-size:11px;color:var(--muted);font-weight:400">v3.11f</span>`;
+  document.querySelector('.logo-name').innerHTML=`${esc(cfg.name)} <span style="font-size:11px;color:var(--muted);font-weight:400">v3.12</span>`;
   alert('Saved!');
 }
 function saveApiKey(){cfg.apiKey=document.getElementById('setApiKey').value.trim();saveCfg();alert('API key saved.');}
@@ -2844,11 +2936,11 @@ async function init(){
   document.documentElement.dataset.theme=cfg.theme||'dark';
   document.documentElement.dataset.palette=cfg.palette||'amethyst';
   document.getElementById('themeBtn').textContent=(cfg.theme||'dark')==='light'?'🌙 Dark':'☀ Light';
-  document.querySelector('.logo-name').innerHTML=`${esc(cfg.name||"Shaun's Personal Dashboard")} <span style="font-size:11px;color:var(--muted);font-weight:400">v3.11f</span>`;
+  document.querySelector('.logo-name').innerHTML=`${esc(cfg.name||"Shaun's Personal Dashboard")} <span style="font-size:11px;color:var(--muted);font-weight:400">v3.12</span>`;
   applyAppearance();
 
-  document.getElementById('maDate').value=today();
-  document.getElementById('compDate') && (document.getElementById('compDate').value=today());
+  document.getElementById('maDate').value=effectiveToday();
+  document.getElementById('compDate') && (document.getElementById('compDate').value=effectiveToday());
 
   // Render immediately from localStorage cache so the dashboard isn't blank
   renderHome();renderTasks();renderStickies();
