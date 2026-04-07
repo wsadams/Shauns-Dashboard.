@@ -1211,7 +1211,7 @@ async function loadFromSupabase(){
         // Seed with sample tasks
         const seedT = seedTasksList();
         const taskRows = seedT.map(t=>({
-          title:t.task, project_id:null, notes:t.note||'', status:t.status,
+          title:t.task, project_name:t.project||null, notes:t.note||'', status:t.status,
           priority:t.priority, percent_complete:t.pct||0,
           flag: t.flagToday?'today': t.flagTmrw?'tomorrow':null,
           blocked_by: t.blockedBy?String(t.blockedBy):null,
@@ -1361,6 +1361,7 @@ async function saveTasks(){
     const rows = tasks.map(t=>({
       id: t._sbid || undefined,
       title: t.task,
+      project_name: t.project||null,
       notes: t.note||'',
       status: t.status,
       priority: t.priority||null,
@@ -1369,6 +1370,7 @@ async function saveTasks(){
       blocked_by: t.blockedBy?String(t.blockedBy):null,
       tags: t.tags||[],
       completed_at: t.completedAt||null,
+      due_date: t.dueDate||null,
       position: t.id,
       parent_id: t.parentId ? (tasks.find(p=>p.id===t.parentId)?._sbid||null) : null,
     }));
@@ -1520,8 +1522,9 @@ async function saveCfg(){
 }
 
 // Supabase query helper with select/filter/order as object params
-sb.query = async function(table, select='*', order=null){
+sb.query = async function(table, select='*', order=null, filter=null){
   let url = `${SUPABASE_URL}/rest/v1/${table}?select=${select}`;
+  if(filter) url += `&${filter}`;
   if(order) url += `&order=${order}`;
   const r = await fetch(url, {
     headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
@@ -2573,21 +2576,33 @@ function projDrop(e,i){
 async function addProject(){
   const n=document.getElementById('newProjIn').value.trim();if(!n||projects.includes(n))return;
   projects.push(n);
-  try {await sb.insert('projects',[{name:n,position:projects.length-1}]);} catch(e){console.error(e);}
-  ls.set('gsd_proj',projects);document.getElementById('newProjIn').value='';renderProjSettings();renderProjTabs();
+  ls.set('gsd_proj',projects);
+  document.getElementById('newProjIn').value='';renderProjSettings();renderProjTabs();
+  try{await sb.insert('projects',[{name:n,position:projects.length-1}]);}
+  catch(e){console.error('addProject SB error:',e);}
 }
 async function deleteProject(i){
   if(!confirm(`Delete "${projects[i]}"?`))return;
-  const name=projects[i];projects.splice(i,1);
-  ls.set('gsd_proj',projects);renderProjSettings();renderProjTabs();
+  const name=projects[i];
+  projects.splice(i,1);
+  ls.set('gsd_proj',projects);
+  renderProjSettings();renderProjTabs();
+  try{
+    const rows=await sb.query('projects','id',null,`name=eq.${encodeURIComponent(name)}`);
+    if(rows[0]) await sb.delete('projects',rows[0].id);
+  }catch(e){console.error('deleteProject SB error:',e);}
 }
 function openProjRename(i){document.getElementById('projEditIdx').value=i;document.getElementById('projEditName').value=projects[i];openModal('projModal');}
-function saveProjRename(){
+async function saveProjRename(){
   const i=+document.getElementById('projEditIdx').value;const n=document.getElementById('projEditName').value.trim();if(!n)return;
   const old=projects[i];projects[i]=n;
   ls.set('gsd_proj',projects);
   tasks.forEach(t=>{if(t.project===old)t.project=n;});
   saveTasks();closeModal('projModal');renderProjSettings();renderProjTabs();
+  try{
+    const rows=await sb.query('projects','id',null,`name=eq.${encodeURIComponent(old)}`);
+    if(rows[0]) await sb.update('projects',rows[0].id,{name:n});
+  }catch(e){console.error('saveProjRename SB error:',e);}
 }
 
 // SANITATION
