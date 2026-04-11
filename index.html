@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shaun's Personal Dashboard v3.1.5</title>
+<title>Shaun's Personal Dashboard v3.1.6</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Inter:wght@300;400;500;600&family=Nunito:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ── PALETTE ACCENTS ─────────────────────────────── */
@@ -283,7 +283,7 @@ tr:last-child td{border-bottom:none;}
 tr.row-done td{opacity:.55;text-decoration:line-through;}
 tr:hover td{background:var(--row-hover);}
 th.sort{cursor:pointer;}th.sort:hover{color:var(--acc2);}
-.cck{width:30px;}.cid{width:40px;}.cfl{width:58px;}.cpri{width:72px;}.ctask{min-width:160px;max-width:300px;}.ctag{max-width:150px;}.cbl{width:34px;}.cst{width:110px;}.cdue{width:84px;}.cpct{width:64px;}.cnote{width:30px;}.cact{width:56px;}
+.cck{width:30px;}.cid{width:40px;}.cfl{width:58px;}.cpri{width:72px;}.ctask{min-width:160px;max-width:300px;}.ctag{max-width:150px;}.cbl{width:34px;}.cst{width:110px;}.cdue{width:84px;}.cpct{width:64px;}.cact{width:56px;}
 .ppill{padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:600;white-space:nowrap;}
 .ph{background:rgba(200,60,60,.12);color:#D07070;border:1px solid rgba(200,60,60,.2);}
 .pm{background:rgba(220,180,50,.1);color:#D4B840;border:1px solid rgba(220,180,50,.2);}
@@ -314,6 +314,14 @@ th.sort{cursor:pointer;}th.sort:hover{color:var(--acc2);}
 .pct-lbl{font-size:10.5px;font-family:'DM Mono',monospace;color:var(--muted);}
 .note-btn{background:none;border:none;cursor:pointer;font-size:12px;opacity:.3;transition:opacity .13s;}
 .note-btn.has-note{opacity:1;}
+/* SVG icon action buttons (Solitude style) */
+.icon-btn{width:26px;height:26px;border-radius:4px;border:none;background:transparent;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .13s;flex-shrink:0;padding:0;}
+.icon-btn:hover{background:var(--bg4);color:var(--muted2);}
+.icon-btn.edit:hover{color:var(--acc2);background:var(--acc3);}
+.icon-btn.delete:hover{color:#D06060;background:rgba(200,70,70,.12);}
+.icon-btn.note-active{color:var(--acc2);}
+.icon-btn.note-dim{opacity:.28;}
+.icon-btn.note-dim:hover{opacity:1;}
 .editable{cursor:pointer;}
 .ci{background:var(--bg4)!important;border:1px solid var(--acc)!important;border-radius:5px;color:var(--text);font-family:var(--body-font);font-size:13px;padding:3px 7px;outline:none;width:100%;}
 .cs2{background:var(--bg4);border:1px solid var(--acc);border-radius:5px;color:var(--text);font-family:var(--body-font);font-size:12px;padding:2px 5px;outline:none;}
@@ -623,7 +631,6 @@ tr.sub-add-row td{background:rgba(124,111,232,0.03);}
           <th class="cst sort" onclick="sortBy('status')">Status</th>
           <th class="cdue sort" onclick="sortBy('dueDate')">Due</th>
           <th class="cpct">%</th>
-          <th class="cnote">📝</th>
           <th class="cact"></th>
         </tr></thead>
         <tbody id="taskTbody"></tbody>
@@ -1116,6 +1123,40 @@ tr.sub-add-row td{background:rgba(124,111,232,0.03);}
   </div>
 </div>
 
+<!-- PRAYER NOTE MODAL -->
+<div class="overlay" id="prayerNoteModal">
+  <div class="modal modal-sm">
+    <div class="mhdr">
+      <h2 id="prayerNoteTitle">Prayer Notes</h2>
+      <button class="close-btn" onclick="closeModal('prayerNoteModal')">×</button>
+    </div>
+    <div class="mbody">
+      <input type="hidden" id="prayerNoteId">
+      <p id="prayerNoteSubtitle" style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5"></p>
+      <div class="field">
+        <label>Notes</label>
+        <div style="border:1px solid var(--border2);border-radius:8px;overflow:hidden">
+          <div style="display:flex;gap:2px;padding:5px 7px;background:var(--bg3);border-bottom:1px solid var(--border)">
+            <button type="button" class="rte-btn" onclick="prayerRteCmd('bold')" title="Bold"><b>B</b></button>
+            <button type="button" class="rte-btn" onclick="prayerRteCmd('italic')" title="Italic"><i>I</i></button>
+            <button type="button" class="rte-btn" onclick="prayerRteCmd('underline')" title="Underline"><u>U</u></button>
+            <span style="width:1px;background:var(--border);margin:0 3px"></span>
+            <button type="button" class="rte-btn" onclick="prayerRteCmd('insertUnorderedList')" title="Bullets">•≡</button>
+            <button type="button" class="rte-btn" onclick="prayerRteCmd('insertOrderedList')" title="Numbered">1≡</button>
+          </div>
+          <div id="prayerNoteBody" contenteditable="true" spellcheck="true"
+            style="min-height:140px;padding:9px 11px;background:var(--input-bg);color:var(--text);font-family:var(--body-font);font-size:13px;outline:none;line-height:1.6">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="closeModal('prayerNoteModal')">Cancel</button>
+      <button class="btn btn-acc" onclick="savePrayerNote()">Save Note</button>
+    </div>
+  </div>
+</div>
+
 <!-- REMINDER OVERLAY -->
 <div class="reminder-overlay" id="reminderOverlay">
   <div class="reminder-box">
@@ -1134,6 +1175,13 @@ tr.sub-add-row td{background:rgba(124,111,232,0.03);}
 <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImportFile()">
 
 <script>
+// ══════════════════════════════════════════════════
+// SVG ICONS (Solitude style)
+// ══════════════════════════════════════════════════
+const SVG_EDIT = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+const SVG_TRASH = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
+const SVG_NOTE = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
+
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
@@ -2090,6 +2138,7 @@ function renderHomePrayers(){
   el.innerHTML=prayers.map(p=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;">
     <input type="checkbox" class="prayer-cb" ${p.checkedToday?'checked':''} onchange="togglePrayerHome('${p.id}',this)">
     <span style="flex:1;font-size:var(--p-size);${p.checkedToday?'text-decoration:line-through;color:var(--muted)':''}">${esc(p.text)}</span>
+    <button class="icon-btn note-dim${p.note?' note-active':''}" onclick="openPrayerNote('${p.id}')" title="${p.note?'View/edit note':'Add note'}" style="flex-shrink:0">${SVG_EDIT}</button>
   </div>`).join('')+`<div style="height:4px"></div>`;
 }
 
@@ -2224,7 +2273,7 @@ function taskTableRow(t, tod, isSubtask=false){
       <button class="flag-btn f-today${t.flagToday?' active':''}" onclick="toggleFlag(${t.id},'flagToday')" title="Flag for Today">T</button>
       <button class="flag-btn f-tmrw${t.flagTmrw?' active':''}" onclick="toggleFlag(${t.id},'flagTmrw')" title="Flag for Tomorrow">M</button>
     </div></td>
-    <td class="cpri"><span class="ppill ${pc}">${t.priority||'—'}</span></td>
+    <td class="cpri editable" onclick="inlineEdit(${t.id},'priority',this)" title="Click to change priority"><span class="ppill ${pc}">${t.priority||'—'}</span></td>
     ${nameCell}
     <td class="ctag">${tags}</td>
     <td class="cbl"><button class="block-btn${hasBlock?' has-block':''}" onclick="openTaskModal(${t.id})" title="${t.blockedBy?'Blocked by #'+t.blockedBy:'No blocker'}">🚫</button></td>
@@ -2234,8 +2283,9 @@ function taskTableRow(t, tod, isSubtask=false){
       <div class="pct-ring"><svg width="22" height="22"><circle class="ring-bg" cx="11" cy="11" r="9"/><circle class="ring-fg" cx="11" cy="11" r="9" stroke="${rc}" stroke-dasharray="${circ}" stroke-dashoffset="${dash}"/></svg></div>
       <span class="pct-lbl">${t.pct||0}%</span>
     </div></td>
-    <td class="cnote"><button class="note-btn${t.note?' has-note':''}" onclick="openNotePop(${t.id},event)">📝</button></td>
-    <td class="cact" style="white-space:nowrap"><button class="edit-btn" onclick="openTaskModal(${t.id})">✏</button><button class="del-btn" onclick="deleteTask(${t.id})">✕</button></td>
+    <td class="cact" style="white-space:nowrap">
+      <button class="icon-btn edit" onclick="openTaskModal(${t.id})" title="Edit task">${SVG_EDIT}</button><button class="icon-btn delete" onclick="deleteTask(${t.id})" title="Delete task">${SVG_TRASH}</button>
+    </td>
   </tr>`;
 }
 
@@ -2345,6 +2395,12 @@ function inlineEdit(id,field,cell){
     ['Not Started','In Progress','On Hold','Complete'].forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;if(v===t[field])o.selected=true;sel.appendChild(o);});
     cell.innerHTML='';cell.appendChild(sel);sel.focus();
     sel.onblur=()=>{pushUndo();if(sel.value==='Complete'&&t.status!=='Complete'){t.completedAt=new Date().toISOString();t.completedDate=effectiveToday();}if(sel.value!=='Complete')t.completedAt=null;t[field]=sel.value;if(sel.value==='Complete')t.pct=100;saveTasks();renderTasks();renderHome();};
+    sel.onchange=()=>sel.blur();
+  }else if(field==='priority'){
+    const sel=document.createElement('select');sel.className='cs2';
+    ['','High','Medium','Low'].forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v||'None';if(v===(t.priority||''))o.selected=true;sel.appendChild(o);});
+    cell.innerHTML='';cell.appendChild(sel);sel.focus();
+    sel.onblur=()=>{pushUndo();t.priority=sel.value;saveTasks();renderTasks();renderHome();};
     sel.onchange=()=>sel.blur();
   }else{
     const inp=document.createElement('input');inp.className='ci';inp.type='text';inp.value=t[field]||'';
@@ -2619,7 +2675,7 @@ function renderNotesTable(){
       <td style="color:var(--muted);font-size:12.5px">${esc(snippet)}${n.body&&n.body.length>255?'…':''}</td>
       <td style="font-size:11px;color:var(--muted)">${colorNames[n.color||'s-yellow']||''}</td>
       <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${new Date(n.created).toLocaleDateString()}</td>
-      <td><button class="edit-btn" onclick="openStickyModal(${n.id})">✏</button><button class="del-btn" onclick="deleteNote(${n.id})">✕</button></td>
+      <td style="white-space:nowrap"><button class="icon-btn edit" onclick="openStickyModal(${n.id})" title="Edit note">${SVG_EDIT}</button><button class="icon-btn delete" onclick="deleteNote(${n.id})" title="Delete note">${SVG_TRASH}</button></td>
     </tr>`;
   }).join('');
 }
@@ -2757,7 +2813,7 @@ function renderAffPage(){
           <span class="aff-line-text" contenteditable="true" spellcheck="false" onblur="saveAffInline(${item.origIdx},this)">${esc(item.text)}</span>
         </div>
         <button class="aff-heart${item.liked?' liked':''}" onclick="toggleAffLike(${item.origIdx})">❤</button>
-        <div class="aff-line-acts"><button class="btn btn-danger btn-xs" onclick="deleteAff(${item.origIdx})">✕</button></div>
+        <div class="aff-line-acts"><button class="icon-btn delete" onclick="deleteAff(${item.origIdx})" title="Delete affirmation">${SVG_TRASH}</button></div>
       </div>`).join(''):`<p style="font-size:12px;color:var(--muted);padding:8px 0">No results${q?' for &quot;'+esc(q)+'&quot;':''}.</p>`}
     ${!q&&totalPages>1?`<div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
       <button class="btn btn-ghost btn-xs" ${page===0?'disabled':''} onclick="affPg(-1)">← Prev</button>
@@ -2856,7 +2912,7 @@ function renderIntentions(){
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
       >${esc(i.text)}</span>
       <span class="int-date">${new Date(i.created).toLocaleDateString()}</span>
-      <button class="int-del" onclick="deleteInt(${i.id})">✕</button>
+      <button class="icon-btn delete" onclick="deleteInt(${i.id})" title="Delete intention">${SVG_TRASH}</button>
     </div>`).join('');
 }
 
@@ -2953,7 +3009,8 @@ function renderPrayerList(){
         onblur="this.style.background='';this.style.outline='';savePrayerInline('${p.id}',this)"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
       >${esc(p.text)}</span>
-      <button class="int-del" onclick="deletePrayer('${p.id}')">✕</button>
+      <button class="icon-btn note-dim${p.note?' note-active':''}" onclick="openPrayerNote('${p.id}')" title="${p.note?'Edit note':'Add note'}">${SVG_EDIT}</button>
+      <button class="icon-btn delete" onclick="deletePrayer('${p.id}')" title="Delete prayer">${SVG_TRASH}</button>
     </div>`).join('');
 }
 
@@ -2964,6 +3021,29 @@ function savePrayerInline(id, el){
   if(text===p.text)return;
   p.text=text;
   savePrayers();
+}
+
+// ── PRAYER NOTE MODAL ─────────────────────────────
+function prayerRteCmd(cmd){ document.getElementById('prayerNoteBody').focus(); document.execCommand(cmd,false,null); }
+
+function openPrayerNote(id){
+  const p=prayers.find(x=>String(x.id)===String(id));if(!p)return;
+  document.getElementById('prayerNoteId').value=String(id);
+  document.getElementById('prayerNoteTitle').textContent='Prayer Notes';
+  document.getElementById('prayerNoteSubtitle').textContent=p.text;
+  document.getElementById('prayerNoteBody').innerHTML=p.note||'';
+  openModal('prayerNoteModal');
+  setTimeout(()=>document.getElementById('prayerNoteBody').focus(),120);
+}
+
+function savePrayerNote(){
+  const id=document.getElementById('prayerNoteId').value;
+  const p=prayers.find(x=>String(x.id)===String(id));if(!p)return;
+  p.note=document.getElementById('prayerNoteBody').innerHTML.trim();
+  savePrayers();
+  renderPrayerList();
+  renderHomePrayers();
+  closeModal('prayerNoteModal');
 }
 
 // ══════════════════════════════════════════════════
@@ -3056,7 +3136,7 @@ function renderQuotesList(){
         >— ${esc(q.author)}</div>
 
       </div>
-      <button onclick="deleteQuote('${q.id}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:rgba(200,70,70,.3);padding:2px 4px;border-radius:4px;flex-shrink:0;transition:all .13s;margin-top:2px" onmouseenter="this.style.color='#D06060'" onmouseleave="this.style.color='rgba(200,70,70,.3)'">✕</button>
+      <button class="icon-btn delete" onclick="deleteQuote('${q.id}')" title="Delete quote" style="margin-top:2px;flex-shrink:0">${SVG_TRASH}</button>
     </div>`).join('')+`</div>`:`<p style="font-size:12px;color:var(--muted);padding:8px">No quotes found${q?' for "'+esc(q)+'"':''}.</p>`)
   +(totalPages>1?`<div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
     <button class="btn btn-ghost btn-sm" ${quotePage===0?'disabled':''} onclick="quotePage--;renderQuotesList()">← Prev</button>
@@ -3157,7 +3237,7 @@ function saveIdentity(){
   cfg.user=document.getElementById('setUser').value.trim()||'';
   cfg.birth=document.getElementById('setBirth').value||'';
   saveCfg();
-  document.querySelector('.logo-name').innerHTML=`${esc(cfg.name)} <span style="font-size:11px;color:var(--muted);font-weight:400">v3.1.5</span>`;
+  document.querySelector('.logo-name').innerHTML=`${esc(cfg.name)} <span style="font-size:11px;color:var(--muted);font-weight:400">v3.1.6</span>`;
   alert('Saved!');
 }
 function saveApiKey(){cfg.apiKey=document.getElementById('setApiKey').value.trim();saveCfg();alert('API key saved.');}
@@ -3420,7 +3500,7 @@ async function init(){
   document.documentElement.dataset.theme=cfg.theme||'dark';
   document.documentElement.dataset.palette=cfg.palette||'amethyst';
   document.getElementById('themeBtn').textContent=(cfg.theme||'dark')==='light'?'🌙 Dark':'☀ Light';
-  document.querySelector('.logo-name').innerHTML=`${esc(cfg.name||"Shaun's Personal Dashboard")} <span style="font-size:11px;color:var(--muted);font-weight:400">v3.1.5</span>`;
+  document.querySelector('.logo-name').innerHTML=`${esc(cfg.name||"Shaun's Personal Dashboard")} <span style="font-size:11px;color:var(--muted);font-weight:400">v3.1.6</span>`;
   applyAppearance();
 
   document.getElementById('maDate').value=effectiveToday();
