@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shaun's Personal Dashboard v3.1.6</title>
+<title>Shaun's Personal Dashboard v3.1.7</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Inter:wght@300;400;500;600&family=Nunito:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ── PALETTE ACCENTS ─────────────────────────────── */
@@ -294,6 +294,7 @@ th.sort{cursor:pointer;}th.sort:hover{color:var(--acc2);}
 .sp-prog{background:var(--acc3);color:var(--acc2);border:1px solid var(--acc-b);}
 .sp-hold{background:rgba(200,140,50,.1);color:#C8A050;border:1px solid rgba(200,140,50,.2);}
 .sp-done{background:rgba(80,200,120,.12);color:#5CC896;border:1px solid rgba(80,200,120,.2);}
+.sp-queue{background:rgba(120,100,220,.15);color:#A48FFF;border:1px solid rgba(120,100,220,.25);}
 .tag-pill{display:inline-block;padding:1px 7px;border-radius:99px;font-size:10px;background:var(--bg4);color:var(--muted2);margin:1px 2px;}
 .done-cb{width:14px;height:14px;cursor:pointer;accent-color:var(--acc);}
 .flag-cell{display:flex;gap:2px;}
@@ -350,11 +351,10 @@ tr.sub-add-row td{background:rgba(124,111,232,0.03);}
 .note-pop-foot{display:flex;justify-content:flex-end;gap:6px;margin-top:8px;}
 
 /* KANBAN */
-.kb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-@media(max-width:900px){.kb-grid{grid-template-columns:repeat(2,1fr);}}
-.kb-col{background:var(--bg3);border-radius:10px;padding:10px;min-height:180px;display:flex;flex-direction:column;gap:5px;}
+.kb-grid{display:flex;flex-direction:row;gap:12px;overflow-x:auto;padding-bottom:10px;min-width:100%;}
+.kb-col{background:var(--bg3);border-radius:10px;padding:10px;min-height:180px;display:flex;flex-direction:column;gap:5px;min-width:220px;flex-shrink:0;}
 .kb-hdr{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
-.kb-none .kb-hdr{color:#9A9AAA;} .kb-prog .kb-hdr{color:var(--acc2);} .kb-hold .kb-hdr{color:#C8A050;} .kb-done .kb-hdr{color:#5CC896;}
+.kb-none .kb-hdr{color:#9A9AAA;} .kb-queue .kb-hdr{color:#A48FFF;} .kb-prog .kb-hdr{color:var(--acc2);} .kb-hold .kb-hdr{color:#C8A050;} .kb-done .kb-hdr{color:#5CC896;}
 .kb-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:7px;padding:9px 11px;cursor:grab;transition:box-shadow .13s;}
 .kb-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.25);}
 .kb-card.dragging{opacity:.4;}
@@ -562,8 +562,10 @@ tr.sub-add-row td{background:rgba(124,111,232,0.03);}
   </div>
   <div class="home-mid">
     <div class="card">
-      <div class="card-title">🚫 Blockers</div>
-      <div id="homeBlockers"><p style="font-size:12px;color:var(--muted)">No blockers.</p></div>
+      <div class="card-title">🔜 Up Next (Queue)
+        <button class="btn btn-ghost btn-xs" onclick="openTaskModalForHome('queue')">＋</button>
+      </div>
+      <div id="homeQueueList" ondragover="homeCardDragOver(event)" ondragleave="homeCardDragLeave(event)" ondrop="homeCardDrop(event,'queue')" style="min-height:30px;border-radius:7px;transition:box-shadow .15s"><p style="font-size:12px;color:var(--muted)">No tasks in the queue.</p></div>
     </div>
     <div class="card">
       <div class="card-title">🙏 Did you Pray Today?</div>
@@ -582,7 +584,10 @@ tr.sub-add-row td{background:rgba(124,111,232,0.03);}
   <div class="home-bot">
     <div class="card">
       <div class="card-title">✦ Affirmation of the Moment
-        <button class="btn btn-ghost btn-xs" onclick="drawMoment()">↺</button>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-ghost btn-xs" onclick="openQuickAddAff()" title="Add affirmation">＋</button>
+          <button class="btn btn-ghost btn-xs" onclick="drawMoment()">↺</button>
+        </div>
       </div>
       <div class="quote-block">
         <div class="aff-moment" id="momentAff">Loading…</div>
@@ -590,7 +595,10 @@ tr.sub-add-row td{background:rgba(124,111,232,0.03);}
     </div>
     <div class="card">
       <div class="card-title">💬 Quote of the Moment
-        <button class="btn btn-ghost btn-xs" onclick="drawQuote()">↺</button>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-ghost btn-xs" onclick="openQuickAddQuote()" title="Add quote">＋</button>
+          <button class="btn btn-ghost btn-xs" onclick="drawQuote()">↺</button>
+        </div>
       </div>
       <div class="quote-block">
         <div class="quote-text" id="quoteText">Loading…</div>
@@ -605,7 +613,7 @@ tr.sub-add-row td{background:rgba(124,111,232,0.03);}
   <div class="proj-tabs" id="projTabs"></div>
   <div class="task-toolbar">
     <div class="srch" style="position:relative"><span class="si">🔍</span><input type="text" id="taskSearch" placeholder="Search tasks…" oninput="renderTasks();document.getElementById('taskSearchClear').style.display=this.value?'flex':'none'"><button id="taskSearchClear" onclick="document.getElementById('taskSearch').value='';document.getElementById('taskSearchClear').style.display='none';renderTasks()" style="display:none;position:absolute;right:7px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;line-height:1;padding:2px">×</button></div>
-    <select class="fsel" id="fStatus" onchange="renderTasks()"><option value="">All Status</option><option>Not Started</option><option>In Progress</option><option>On Hold</option><option>Complete</option></select>
+    <select class="fsel" id="fStatus" onchange="renderTasks()"><option value="">All Status</option><option>Not Started</option><option>Queue</option><option>In Progress</option><option>On Hold</option><option>Complete</option></select>
     <select class="fsel" id="fPri" onchange="renderTasks()"><option value="">All Priority</option><option>High</option><option>Medium</option><option>Low</option></select>
     <select class="fsel" id="fTag" onchange="renderTasks()"><option value="">All Tags</option></select>
     <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--muted);cursor:pointer"><input type="checkbox" id="showDone" onchange="renderTasks()" style="accent-color:var(--acc)"> Show Completed</label>
@@ -1025,6 +1033,44 @@ tr.sub-add-row td{background:rgba(124,111,232,0.03);}
   </div>
 </div>
 
+<!-- QUICK ADD AFFIRMATION MODAL -->
+<div class="overlay" id="quickAddAffModal">
+  <div class="modal modal-sm">
+    <div class="mhdr"><h2>Add Affirmation</h2><button class="close-btn" onclick="closeModal('quickAddAffModal')">×</button></div>
+    <div class="mbody">
+      <div class="field">
+        <label>Affirmation Text</label>
+        <input type="text" id="quickAffInput" placeholder="I AM…" onkeydown="if(event.key==='Enter')saveQuickAff()">
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="closeModal('quickAddAffModal')">Cancel</button>
+      <button class="btn btn-acc" onclick="saveQuickAff()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK ADD QUOTE MODAL -->
+<div class="overlay" id="quickAddQuoteModal">
+  <div class="modal modal-sm">
+    <div class="mhdr"><h2>Add Quote</h2><button class="close-btn" onclick="closeModal('quickAddQuoteModal')">×</button></div>
+    <div class="mbody">
+      <div class="field">
+        <label>Quote</label>
+        <input type="text" id="quickQuoteInput" placeholder="Enter quote…" onkeydown="if(event.key==='Enter')saveQuickQuote()">
+      </div>
+      <div class="field">
+        <label>Author <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+        <input type="text" id="quickQuoteAuthor" placeholder="Author name…" onkeydown="if(event.key==='Enter')saveQuickQuote()">
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="closeModal('quickAddQuoteModal')">Cancel</button>
+      <button class="btn btn-acc" onclick="saveQuickQuote()">Add</button>
+    </div>
+  </div>
+</div>
+
 <!-- TASK MODAL -->
 <div class="overlay" id="taskModal">
   <div class="modal">
@@ -1036,7 +1082,7 @@ tr.sub-add-row td{background:rgba(124,111,232,0.03);}
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px">
         <div class="field"><label>Project</label><select id="fProj"></select></div>
         <div class="field"><label>Priority</label><select id="fPrij"><option value="">None</option><option>High</option><option>Medium</option><option>Low</option></select></div>
-        <div class="field"><label>Status</label><select id="fStat" onchange="onModalStatusChange(this.value)"><option>Not Started</option><option>In Progress</option><option>On Hold</option><option>Complete</option></select></div>
+        <div class="field"><label>Status</label><select id="fStat" onchange="onModalStatusChange(this.value)"><option>Not Started</option><option>Queue</option><option>In Progress</option><option>On Hold</option><option>Complete</option></select></div>
       </div>
       <div class="field"><label>Task Name</label><input type="text" id="fTask" placeholder="What needs to be done?"></div>
       <div class="field"><label>Tags (space-separated #hashtags)</label><div style="position:relative"><input type="text" id="fTags" placeholder="#ISC #launch #urgent" oninput="showTagSuggest(this)" onkeydown="tagSuggestKeyNav(event,this)" onblur="setTimeout(hideTagSuggest,150)" style="width:100%;padding:8px 11px;background:var(--input-bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--body-font);font-size:13px;outline:none"><div id="tagSuggestDrop" class="tag-suggest" style="display:none"></div></div></div>
@@ -1987,6 +2033,9 @@ function homeDrop(e,targetId,targetSec){
     } else if(targetSec==='tomorrow'){
       t.flagTmrw=true;t.flagToday=false;
       if(dragSec==='completed'){t.status='Not Started';t.completedAt=null;t.pct=t.pct===100?0:t.pct;}
+    } else if(targetSec==='queue'){
+      t.status='Queue';
+      if(dragSec==='completed'){t.completedAt=null;t.pct=t.pct===100?0:t.pct;}
     }
   }
   saveTasks();renderHome();renderTasks();
@@ -2011,6 +2060,9 @@ function homeCardDrop(e,sec){
   } else if(sec==='tomorrow'){
     t.flagTmrw=true;t.flagToday=false;
     if(dragSec==='completed'){t.status='Not Started';t.completedAt=null;t.pct=t.pct===100?0:t.pct;}
+  } else if(sec==='queue'){
+    t.status='Queue';
+    if(dragSec==='completed'){t.completedAt=null;t.pct=t.pct===100?0:t.pct;}
   }
   saveTasks();renderHome();renderTasks();
 }
@@ -2027,9 +2079,9 @@ function renderHome(){
   document.getElementById('homeStats').innerHTML=`
     <div class="stat-chip"><div class="sv">${active.length}</div><div class="sl">Active</div></div>
     <div class="stat-chip"><div class="sv">${tasks.filter(t=>t.status==='In Progress').length}</div><div class="sl">In Progress</div></div>
+    <div class="stat-chip"><div class="sv">${tasks.filter(t=>t.status==='Queue').length}</div><div class="sl">Queue</div></div>
     <div class="stat-chip"><div class="sv" style="color:${overdue.length?'#D07070':'var(--acc2)'}">${overdue.length}</div><div class="sl">Overdue</div></div>
-    <div class="stat-chip"><div class="sv">${doneToday.length}</div><div class="sl">Done Today</div></div>
-    <div class="stat-chip"><div class="sv" style="color:${blocked.length?'#D07050':'var(--acc2)'}">${blocked.length}</div><div class="sl">Blockers</div></div>`;
+    <div class="stat-chip"><div class="sv">${doneToday.length}</div><div class="sl">Done Today</div></div>`;
 
   // Today -- includes subtasks flagged for today
   const todayTasks=tasks.filter(t=>t.flagToday&&t.status!=='Complete');
@@ -2046,16 +2098,11 @@ function renderHome(){
   renderHomeIntentions();
   renderHomePrayers();
 
-  const blockEl=document.getElementById('homeBlockers');
-  if(!blocked.length){blockEl.innerHTML=`<p style="font-size:12px;color:var(--muted)">No blockers.</p>`;}
-  else{
-    blockEl.innerHTML=`<div class="blocker-card"><div class="blocker-hdr">🚫 ${blocked.length} Blocked Task${blocked.length!==1?'s':''}</div>`
-      +blocked.map(t=>{
-        const bid=String(t.blockedBy).trim();
-        const blocker=tasks.find(x=>String(x.id)===bid||x.id===parseInt(bid));
-        return`<div class="blocker-row"><span class="blocker-id">#${t.id}</span><span class="blocker-name">${esc(t.task)}</span><span class="blocker-by">blocked by #${bid}${blocker?' · '+blocker.task.slice(0,30):''}</span></div>`;
-      }).join('')+`</div>`;
-  }
+  // Queue tasks
+  const queueTasks=tasks.filter(t=>t.status==='Queue');
+  document.getElementById('homeQueueList').innerHTML=queueTasks.length
+    ?queueTasks.map(t=>taskRow(t,'queue')).join('')
+    :`<p style="font-size:12px;color:var(--muted)">No tasks in the queue.</p>`;
   // Always keep the date picker in sync with effectiveToday
   // (handles midnight rollover without requiring a page refresh)
   const maDateEl = document.getElementById('maDate');
@@ -2072,7 +2119,7 @@ function renderHome(){
 function taskRow(t, section){
   const isOD=t.dueDate&&t.dueDate<today();
   const dot={'High':'#D07070','Medium':'#D4B840','Low':'#6B9CF0','':'var(--muted)'}[t.priority||''];
-  let badge=isOD?`<span class="th-badge b-od">Overdue</span>`:t.status==='In Progress'?`<span class="th-badge b-prog">In Progress</span>`:'';
+  let badge=isOD?`<span class="th-badge b-od">Overdue</span>`:t.status==='In Progress'?`<span class="th-badge b-prog">In Progress</span>`:t.status==='Queue'?`<span class="th-badge" style="background:rgba(120,100,220,.15);color:#A48FFF;border:1px solid rgba(120,100,220,.25)">Queue</span>`:'';
   const parentLabel=t.parentId?`<span style="font-size:10px;color:var(--muted);margin-left:4px">↳ subtask</span>`:'';
   const sec=section||'';
   const isFocused=focusTaskId===t.id;
@@ -2236,7 +2283,7 @@ function buildTagsDropdown(){
 function taskTableRow(t, tod, isSubtask=false){
   const isDone=t.status==='Complete';
   const isOD=t.dueDate&&!isDone&&t.dueDate<tod;
-  const sc={'Not Started':'sp-none','In Progress':'sp-prog','On Hold':'sp-hold','Complete':'sp-done'}[t.status]||'sp-none';
+  const sc={'Not Started':'sp-none','Queue':'sp-queue','In Progress':'sp-prog','On Hold':'sp-hold','Complete':'sp-done'}[t.status]||'sp-none';
   const pc={'High':'ph','Medium':'pm','Low':'pl','':'pn'}[t.priority||'']||'pn';
   const circ=2*Math.PI*9,dash=circ*(1-(t.pct||0)/100);
   const rc=isDone?'#70C898':t.pct>50?'var(--acc)':'#D4B840';
@@ -2392,7 +2439,7 @@ function inlineEdit(id,field,cell){
   const t=tasks.find(x=>x.id===id);if(!t)return;
   if(field==='status'){
     const sel=document.createElement('select');sel.className='cs2';
-    ['Not Started','In Progress','On Hold','Complete'].forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;if(v===t[field])o.selected=true;sel.appendChild(o);});
+    ['Not Started','Queue','In Progress','On Hold','Complete'].forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;if(v===t[field])o.selected=true;sel.appendChild(o);});
     cell.innerHTML='';cell.appendChild(sel);sel.focus();
     sel.onblur=()=>{pushUndo();if(sel.value==='Complete'&&t.status!=='Complete'){t.completedAt=new Date().toISOString();t.completedDate=effectiveToday();}if(sel.value!=='Complete')t.completedAt=null;t[field]=sel.value;if(sel.value==='Complete')t.pct=100;saveTasks();renderTasks();renderHome();};
     sel.onchange=()=>sel.blur();
@@ -2437,7 +2484,7 @@ function openTaskModalForHome(section){
   document.getElementById('quickAddSection').value=section;
   document.getElementById('quickAddInput').value='';
   document.getElementById('quickAddTitle').textContent=
-    section==='today'?'Add to To-Do Today':'Add to To-Do Tomorrow';
+    section==='today'?'Add to To-Do Today':section==='queue'?'Add to Queue':'Add to To-Do Tomorrow';
   openModal('quickAddModal');
   setTimeout(()=>document.getElementById('quickAddInput').focus(),100);
 }
@@ -2450,7 +2497,7 @@ function saveQuickAdd(){
   tasks.push({
     id:++taskSeq,_sbid:null,
     project:projects[0]||'Personal',
-    priority:'',status:'Not Started',
+    priority:'',status:section==='queue'?'Queue':'Not Started',
     task:name,tags:[],dueDate:'',pct:0,note:'',
     completedAt:null,completedDate:null,
     flagToday:section==='today',
@@ -2557,7 +2604,7 @@ function setView(v){
 }
 
 let kbDragId=null;
-let kbCollapsed={'Not Started':true,'In Progress':false,'On Hold':false,'Complete':false};
+let kbCollapsed={'Not Started':true,'Queue':false,'In Progress':false,'On Hold':false,'Complete':false};
 function toggleKbCol(col){
   kbCollapsed[col]=!kbCollapsed[col];
   const colEl=document.querySelector(`.kb-col[data-col="${CSS.escape(col)}"]`);if(!colEl)return;
@@ -2565,8 +2612,8 @@ function toggleKbCol(col){
   if(cards)cards.style.display=collapsed?'none':'flex';if(drop)drop.style.display=collapsed?'none':'flex';if(arrow)arrow.textContent=collapsed?'▶':'▼';
 }
 function renderKanban(){
-  const cols=['Not Started','In Progress','On Hold','Complete'];
-  const clsM={'Not Started':'kb-none','In Progress':'kb-prog','On Hold':'kb-hold','Complete':'kb-done'};
+  const cols=['Not Started','Queue','In Progress','On Hold','Complete'];
+  const clsM={'Not Started':'kb-none','Queue':'kb-queue','In Progress':'kb-prog','On Hold':'kb-hold','Complete':'kb-done'};
   const tod=today();let base=tasks.filter(t=>activeProjTab==='All'||t.project===activeProjTab);
   const showD=document.getElementById('showDone')?.checked;
   document.getElementById('kbGrid').innerHTML=cols.map(col=>{
@@ -2840,6 +2887,32 @@ function addAff(){
   el.value='';
   renderAffPage(); // update UI immediately
   saveAffs();      // save to SB in background
+}
+
+function openQuickAddAff(){
+  document.getElementById('quickAffInput').value='';
+  openModal('quickAddAffModal');
+  setTimeout(()=>document.getElementById('quickAffInput').focus(),100);
+}
+function saveQuickAff(){
+  const text=document.getElementById('quickAffInput').value.trim();if(!text)return;
+  if(!affPools.main)affPools.main={name:'Affirmations',items:[]};
+  affPools.main.items.push({text,liked:false,_sbid:null});
+  closeModal('quickAddAffModal');
+  saveAffs();drawMoment();
+}
+function openQuickAddQuote(){
+  document.getElementById('quickQuoteInput').value='';
+  document.getElementById('quickQuoteAuthor').value='';
+  openModal('quickAddQuoteModal');
+  setTimeout(()=>document.getElementById('quickQuoteInput').focus(),100);
+}
+function saveQuickQuote(){
+  const t=document.getElementById('quickQuoteInput').value.trim();if(!t)return;
+  const a=document.getElementById('quickQuoteAuthor').value.trim();
+  quotes.push({id:null,text:t,author:a,liked:false,_isFromSB:false});
+  closeModal('quickAddQuoteModal');
+  saveQuotes();drawQuote();
 }
 function deleteAff(idx){
   if(!confirm('Remove?'))return;
@@ -3500,7 +3573,7 @@ async function init(){
   document.documentElement.dataset.theme=cfg.theme||'dark';
   document.documentElement.dataset.palette=cfg.palette||'amethyst';
   document.getElementById('themeBtn').textContent=(cfg.theme||'dark')==='light'?'🌙 Dark':'☀ Light';
-  document.querySelector('.logo-name').innerHTML=`${esc(cfg.name||"Shaun's Personal Dashboard")} <span style="font-size:11px;color:var(--muted);font-weight:400">v3.1.6</span>`;
+  document.querySelector('.logo-name').innerHTML=`${esc(cfg.name||"Shaun's Personal Dashboard")} <span style="font-size:11px;color:var(--muted);font-weight:400">v3.1.7</span>`;
   applyAppearance();
 
   document.getElementById('maDate').value=effectiveToday();
